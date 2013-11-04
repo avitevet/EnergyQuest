@@ -4,7 +4,7 @@ class OpenLocation < BoardLocation
   
   def initialize
     @food = false
-    @player = false
+    @player = nil
   end
  
   def food?
@@ -16,7 +16,7 @@ class OpenLocation < BoardLocation
   end
 
   def player?
-    @player
+    !@player.nil?
   end
   
   def player=(p)

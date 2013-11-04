@@ -1,10 +1,11 @@
 require 'wall_location'
 require 'open_location'
+require 'direction'
 
 class Board
   attr_accessor :locations
   
-  def initialize(height, width)
+  def initialize(height, width, player)
     # create the board, which is a multidimensional array of BoardLocations
     # the board will be size (height + 2, width + 2).  The extra locations are the borders,
     # which will be initialized as WallLocations.  The others will be initialized as OpenLocations
@@ -26,9 +27,10 @@ class Board
     # set ranges for food & player
     @hRange = (1..height)
     @wRange = (1..width)
+    @playerLocation = [nil, nil]
     
     self.placeFoodRandomly
-    self.placePlayerRandomly
+    self.placePlayerRandomly(player)
     #self.locations[1][1].food = true
   end
 
@@ -44,14 +46,51 @@ class Board
     self.locations[h][w].food = true 
   end
 
-  def placePlayerRandomly
+  def placePlayerRandomly(player)
     begin
       h, w = self.randomLocation()
     end while self.locations[h][w].food?
 
-    self.locations[h][w].player = true 
+    self.locations[h][w].player = player
+    # cache the player location
+    @playerLocation = [h, w]
   end
 
+
+  def validMove?(direction)
+    case direction
+    when Direction.UP
+      case self.locations[height - 1][width]
+      when WallLocation
+        false
+      else
+        true
+      end
+    when Direction.DOWN
+      case self.locations[height + 1][width]
+      when WallLocation
+        false
+      else
+        true
+      end
+    when Direction.LEFT
+      case self.locations[height][width - 1]
+      when WallLocation
+        false
+      else
+        true
+      end
+    when Direction.RIGHT
+      case self.locations[height][width + 1]
+      when WallLocation
+        false
+      else
+        true
+      end
+    else
+      throw "Invalid direction!  This should never happen" 
+    end
+  end
 
   def to_s
     strs = self.locations.map do |rows|
@@ -62,8 +101,8 @@ class Board
         when OpenLocation
           if location.player?
             "X"
-          elsif location.food?
-            "F"
+#          elsif location.food?
+#            "F"
           else
             "."
           end
