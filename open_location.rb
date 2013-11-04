@@ -11,7 +11,15 @@ class OpenLocation < BoardLocation
     @food
   end
 
+  def food=(f)
+    @food = f
+  end
+
   def player?
     @player
+  end
+  
+  def player=(p)
+    @player = p
   end  
 end

@@ -22,7 +22,36 @@ class Board
         end
       end 
     end
+    
+    # set ranges for food & player
+    @hRange = (1..height)
+    @wRange = (1..width)
+    
+    self.placeFoodRandomly
+    self.placePlayerRandomly
+    #self.locations[1][1].food = true
   end
+
+  def randomLocation
+    [rand(@hRange), rand(@wRange)]
+  end
+
+  def placeFoodRandomly
+    begin
+      h, w = self.randomLocation()
+    end while self.locations[h][w].player?
+
+    self.locations[h][w].food = true 
+  end
+
+  def placePlayerRandomly
+    begin
+      h, w = self.randomLocation()
+    end while self.locations[h][w].food?
+
+    self.locations[h][w].player = true 
+  end
+
 
   def to_s
     strs = self.locations.map do |rows|
@@ -30,10 +59,14 @@ class Board
         case location
         when WallLocation
           "W"
-        when location.player?
-          "X"
-        else
-          "."
+        when OpenLocation
+          if location.player?
+            "X"
+          elsif location.food?
+            "F"
+          else
+            "."
+          end
         end
       end
     end
