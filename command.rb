@@ -13,25 +13,25 @@ class Command
   end
   
   def direction?
-    !direction.nil?
+    !self.direction().nil?
   end
   
   def direction
-    case self.text
+    case self.text.upcase
     when "U"
-      Direction.UP
+      Direction::Up
     when "D"
-      Direction.DOWN
+      Direction::Down
     when "L"
-      Direction.LEFT
+      Direction::Left
     when "R"
-      Direction.RIGHT
+      Direction::Right
     else
       nil
     end
   end
   
   def quit?
-    self.text == "Quit"
+    self.text.downcase == "quit" || self.text.downcase == "q" 
   end
 end

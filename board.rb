@@ -2,10 +2,11 @@ require 'wall_location'
 require 'open_location'
 require 'direction'
 
+
 class Board
   attr_accessor :locations
   
-  def initialize(height, width, player)
+  def initialize(height, width)
     # create the board, which is a multidimensional array of BoardLocations
     # the board will be size (height + 2, width + 2).  The extra locations are the borders,
     # which will be initialized as WallLocations.  The others will be initialized as OpenLocations
@@ -27,70 +28,82 @@ class Board
     # set ranges for food & player
     @hRange = (1..height)
     @wRange = (1..width)
-    @playerLocation = [nil, nil]
-    
-    self.placeFoodRandomly
-    self.placePlayerRandomly(player)
-    #self.locations[1][1].food = true
+    @playerCoords = [nil, nil]
+  end
+
+  def at(h,w)
+    self.locations[h][w]
+  end
+
+  def currentPlayerLocation
+    h, w = @playerCoords
+    self.at(h, w)
   end
 
   def randomLocation
     [rand(@hRange), rand(@wRange)]
   end
 
-  def placeFoodRandomly
+  def placeFoodRandomly(food)
     begin
       h, w = self.randomLocation()
-    end while self.locations[h][w].player?
+    end while self.at(h, w).player?
 
-    self.locations[h][w].food = true 
+    self.at(h, w).food = food 
   end
 
   def placePlayerRandomly(player)
     begin
       h, w = self.randomLocation()
-    end while self.locations[h][w].food?
+    end while self.at(h, w).food?
 
-    self.locations[h][w].player = player
+    self.at(h, w).player = player
     # cache the player location
-    @playerLocation = [h, w]
+    @playerCoords = [h, w]
   end
 
 
-  def validMove?(direction)
-    case direction
-    when Direction.UP
-      case self.locations[height - 1][width]
-      when WallLocation
-        false
-      else
-        true
-      end
-    when Direction.DOWN
-      case self.locations[height + 1][width]
-      when WallLocation
-        false
-      else
-        true
-      end
-    when Direction.LEFT
-      case self.locations[height][width - 1]
-      when WallLocation
-        false
-      else
-        true
-      end
-    when Direction.RIGHT
-      case self.locations[height][width + 1]
-      when WallLocation
-        false
-      else
-        true
-      end
+  def move(direction)
+    h, w = @playerCoords
+    newH, newW = direction.moveFrom(h, w)
+    
+    currentLocation = self.currentPlayerLocation() 
+    newLocation = self.at(newH, newW)
+
+
+    case newLocation
+    when WallLocation
+      false
     else
-      throw "Invalid direction!  This should never happen" 
+      # actually move the player
+      newLocation.player = self.at(h, w).player
+      self.at(h, w).player = nil
+      @playerCoords = [newH, newW]
+      true
     end
   end
+
+  # returns the food that was eaten if it was consumed, nil otherwise
+  def computeNewEnergies
+    cur = currentPlayerLocation()
+    
+    # subtract the energy needed for moving
+    cur.player.energy -= 1
+    
+    if cur.food?
+      # consume & move the food
+      food = cur.food
+      cur.player.energy += food.energy  
+      
+      self.placeFoodRandomly(food)
+      cur.food = nil
+      
+      food
+    else
+      nil
+    end
+  end
+
 
   def to_s
     strs = self.locations.map do |rows|
